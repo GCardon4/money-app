@@ -12,12 +12,14 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "build": "quasar build",
+    "start": "serve dist/spa -p 3000",
     "postinstall": "quasar prepare"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "@supabase/supabase-js": "^2.89.0",
     "quasar": "^2.16.0",
+    "serve": "^14.2.4",
     "vue": "^3.5.22",
     "vue-router": "^4.0.0"
   },
