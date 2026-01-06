@@ -43,7 +43,6 @@ Crear una aplicación financiera personal que permita:
 
 ### 3.1 Autenticación
 
-* Registro de usuario
 * Inicio de sesión
 * Recuperación de contraseña
 * Protección de rutas
