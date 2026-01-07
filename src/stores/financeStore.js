@@ -64,7 +64,13 @@ export const useFinanceStore = defineStore('finance', {
       try {
         const { data, error } = await supabase
           .from('expenses')
-          .select('*')
+          .select(`
+            *,
+            category_expenses (
+              id,
+              name
+            )
+          `)
           .eq('user_id', authStore.user.id)
           .order('created_at', { ascending: false })
 
