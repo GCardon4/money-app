@@ -176,7 +176,9 @@ Gestionado por Supabase Auth.
 * user_id
 * date
 * amount
+* source
 * category
+* pay_method
 * description
 
 #### expenses
@@ -197,6 +199,7 @@ Gestionado por Supabase Auth.
 * total_amount
 * outstanding_amount
 * status
+* description
 
 #### commitments
 
@@ -206,6 +209,7 @@ Gestionado por Supabase Auth.
 * amount
 * frecuency
 * pay_date
+* status
 
 ---
 

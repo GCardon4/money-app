@@ -15,19 +15,10 @@ Aplicación personal para el control y análisis de movimientos financieros, cen
 
 ### Tablas Supabase
 - Profiles (profiles) / Usuarios y Perfiles
-- Companies (companies) / Empresas
-- Roles (roles) / Roles creados = Admin, Manager, User, Bodega, Caja
-- Products (products) / Productos con nombre, sku, costo y stock
-- Sales (sales) / Ventas de productos registradas por usuarios Caja
-  * id: BIGINT (autoincremento) - Primary Key
-  * user_id: UUID - Referencia a profiles(id)
-  * transaction_id: UUID - Referencia a transactions(id)
-  * company_id, cashes_id, product_id: BIGINT
-- Suppliers (suppliers) / Proveedores de productos por empresa
-- Cash Registers (cash_registers) / Cajas registradoras
-- Transactions (transactions) / Transacciones/Carritos de venta
-  * id: UUID - Primary Key
-  * user_id: UUID - Usuario que creó la transacción
+- Incomes (incomes) / Ingresos
+- Expenses (expenses) / Egresos y Gastos diarios
+- Debts (debts) / Administra y crea las deudas
+- Commitments (commitments) / Gastos Mensuales
 
 ### Funcionalidades Principales
 
@@ -40,25 +31,22 @@ Aplicación personal para el control y análisis de movimientos financieros, cen
 
 ### Funcionalidades Especificas
 
-- **Usuario Admin (role_id: 1)**
-	-- Crea usuarios con todos los roles
-	-- Limita creación de empresas en los usuarios manager
-	-- Listado de TODAS las Empresas del sistema
-	-- Listado de TODOS los usuarios del sistema
-	-- Ve listado de lotes por empresas
-	-- Panel administrativo completo
+- **Usuario
+	-- Crea Ingresos Diarios
+	-- Crea Egresos Diarios
+	-- Crea y administra Deudas
+	-- Visualiza en el Home las estadísticas mensuales
 
 
 
 ###  Módulos Implementados
 
 1. **Autenticación** - Login
-2. **Gestión de Usuarios** - CRUD de usuarios que crea el admin
-3. **Gestión de Empresas** - CRUD de Empresas por admin y managers
-4. **Gestión de Productos** - CRUD de productos por empresa
-5. **Gestión de Bodega** - Ingreso de productos con audio y escaneo de códigos
-6. **Gestión de Ventas** - Registro y seguimiento de ventas por usuarios Caja
-7. **Análisis Manager** - Vista detallada de empresas con productos, ventas, costos y análisis mensual
+2. **Estadísticas Mensuales** Egresos, Ingresos, Ganancias
+3. **Gestión de de Ingresos** con CRUD completo
+4. **Gestión de de Egresos** con CRUD completo
+5. **Gestión de Deudas** con CRUD completo
+
 
 ##  Stack Tecnológico
 
