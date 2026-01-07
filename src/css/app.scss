@@ -16,6 +16,32 @@
   }
 }
 
+
+.expense-form-container {
+  background: white;
+  padding: 12px;
+  border-top: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.expense-form {
+  max-width: 1200px;
+  margin: 0 auto;
+
+}
+
+.floating-btn {
+  position: absolute;
+  right: 0px;
+  bottom: 145px;
+  z-index: 1;
+
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 .expenses-list {
   list-style: none;
   padding: 0;

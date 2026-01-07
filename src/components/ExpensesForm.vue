@@ -1,77 +1,93 @@
 <template>
   <div class="expense-form-container">
     <q-form @submit.prevent="handleSubmit" class="expense-form">
-      <div class="form-row">
-        <!-- Campo de Monto -->
-        <q-input
-          v-model.number="amount"
-          type="number"
-          placeholder="Monto"
-          dense
-          outlined
-          class="form-input amount-input"
-          :rules="[val => !!val && val > 0 || 'Requerido']"
-          step="0.01"
-          min="0"
-          prefix="$"
-          :disable="loading"
-        />
-
-        <!-- Campo de Descripción -->
-        <q-input
-          v-model="description"
-          placeholder="Descripción"
-          dense
-          outlined
-          class="form-input description-input"
-          :rules="[val => !!val || 'Requerido']"
-          maxlength="50"
-          :disable="loading"
-        />
-
-        <!-- Selector de Categoría -->
-        <q-select
-          v-model="categoryId"
-          :options="categoryOptions"
-          option-value="id"
-          option-label="name"
-          emit-value
-          map-options
-          placeholder="Categoría"
-          dense
-          outlined
-          class="form-input category-select"
-          :rules="[val => !!val || 'Requerido']"
-          :disable="loading || loadingCategories"
-          :loading="loadingCategories"
-        />
-
-        <!-- Selector de Tipo -->
-        <q-select
-          v-model="type"
-          :options="typeOptions"
-          placeholder="Tipo"
-          dense
-          outlined
-          class="form-input type-select"
-          :rules="[val => !!val || 'Requerido']"
-          :disable="loading"
-        />
-
-        <!-- Botón de Agregar -->
-        <q-btn
-          type="submit"
-          icon="add"
-          color="negative"
-          dense
-          unelevated
-          class="add-btn align-right"
-          :loading="loading"
-          :disable="loading"
-        >
-          <q-tooltip>Agregar Gasto</q-tooltip>
-        </q-btn>
+      <!-- Primera fila: Monto y Descripción -->
+      <div class="row q-col-gutter-sm q-mb-sm">
+        <div class="col-4 col-md-2">
+          <q-input
+            v-model.number="amount"
+            type="number"
+            placeholder="Monto"
+            dense
+            outlined
+            :rules="[val => !!val && val > 0 || 'Requerido']"
+            step="0.01"
+            min="0"
+            prefix="$"
+            :disable="loading"
+          />
+        </div>
+        
+        <div class="col-8 col-md-10">
+          <q-input
+            v-model="description"
+            placeholder="Descripción"
+            dense
+            outlined
+            :rules="[val => !!val || 'Requerido']"
+            maxlength="50"
+            :disable="loading"
+          />
+        </div>
       </div>
+
+      <!-- Segunda fila: Tipo, Categoría y Método de Pago -->
+      <div class="row q-col-gutter-sm">
+        <div class="col-4">
+          <q-select
+            v-model="type"
+            :options="typeOptions"
+            placeholder="Tipo"
+            dense
+            outlined
+            :rules="[val => !!val || 'Requerido']"
+            :disable="loading"
+          />
+        </div>
+        
+        <div class="col-4">
+          <q-select
+            v-model="categoryId"
+            :options="categoryOptions"
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            placeholder="Categoría"
+            dense
+            outlined
+            :rules="[val => !!val || 'Requerido']"
+            :disable="loading || loadingCategories"
+            :loading="loadingCategories"
+          />
+        </div>
+
+        <div class="col-4">
+          <q-select
+            v-model="payMethod"
+            :options="payMethodOptions"
+            placeholder="Método"
+            dense
+            outlined
+            :rules="[val => !!val || 'Requerido']"
+            :disable="loading"
+          />
+        </div>
+      </div>
+
+      <!-- Botón Flotante -->
+      <q-btn
+        type="submit"
+        fab
+        icon="add"
+        color="negative"
+        class="floating-btn"
+        :loading="loading"
+        :disable="loading"
+      >
+        <q-tooltip>Agregar Gasto</q-tooltip>
+      </q-btn>
+      
     </q-form>
   </div>
 </template>
@@ -92,6 +108,7 @@ const amount = ref(null)
 const description = ref('')
 const categoryId = ref(null)
 const type = ref('Variable')
+const payMethod = ref('Efectivo')
 const loading = ref(false)
 const loadingCategories = ref(false)
 
@@ -100,6 +117,9 @@ const categoryOptions = ref([])
 
 // Opciones de tipo de gasto
 const typeOptions = ['Fijo', 'Variable']
+
+// Opciones de método de pago
+const payMethodOptions = ['Efectivo', 'Banco']
 
 // Carga las categorías desde Supabase
 const loadCategories = async () => {
@@ -132,7 +152,7 @@ const loadCategories = async () => {
 
 // Guarda un nuevo gasto en Supabase
 const handleSubmit = async () => {
-  if (!amount.value || !description.value || !categoryId.value || !type.value) return
+  if (!amount.value || !description.value || !categoryId.value || !type.value || !payMethod.value) return
 
   loading.value = true
   try {
@@ -144,7 +164,8 @@ const handleSubmit = async () => {
           amount: amount.value,
           description: description.value,
           category: categoryId.value,
-          type: type.value
+          type: type.value,
+          pay_method: payMethod.value
         }
       ])
 
@@ -163,6 +184,7 @@ const handleSubmit = async () => {
     // Limpiar formulario
     amount.value = null
     description.value = ''
+    payMethod.value = 'Efectivo'
     type.value = 'Variable'
     // Mantener la categoría seleccionada
   } catch (error) {
@@ -182,66 +204,3 @@ onMounted(() => {
   loadCategories()
 })
 </script>
-
-<style scoped lang="scss">
-.expense-form-container {
-  background: white;
-  padding: 8px 12px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.expense-form {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.form-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    gap: 6px;
-  }
-}
-
-.form-input {
-  flex: 1;
-  min-width: 80px;
-}
-
-.amount-input {
-  max-width: 120px;
-
-  @media (max-width: 768px) {
-    max-width: 100px;
-  }
-}
-
-.description-input {
-  flex: 2;
-  min-width: 150px;
-}
-
-.category-select {
-  max-width: 150px;
-
-  @media (max-width: 768px) {
-    max-width: 120px;
-  }
-}
-
-.type-select {
-  max-width: 120px;
-
-  @media (max-width: 768px) {
-    max-width: 100px;
-  }
-}
-
-.add-btn {
-  min-width: 45px;
-  height: 40px;
-}
-</style>
