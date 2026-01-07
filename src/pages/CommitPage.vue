@@ -29,20 +29,13 @@
             <div class="text-h5 text-primary text-weight-bold">
               ${{ formatAmount(totalMonthly) }}
             </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="text-subtitle2 text-grey-7">Compromisos Activos</div>
-            <div class="text-h5 text-primary text-weight-bold">
+            <div class="text-h5 text-primary text-caption">
               {{ activeCommitments.length }}
             </div>
           </q-card-section>
         </q-card>
       </div>
+
 
       <!-- Lista de Compromisos -->
       <div class="col-12">
