@@ -178,7 +178,7 @@ Gestionado por Supabase Auth.
 * created_at
 * amount
 * source
-* category
+* name
 * pay_method
 * description
 
