@@ -5,8 +5,8 @@
       <div class="col-12">
         <q-card flat bordered>
           <q-card-section>
-            <div class="text-h5 text-weight-bold">
-              ¡Bienvenido, {{ userName }}! 👋
+            <div class="text-h6 text-weight-bold">
+              ¡Hola, {{ userName }}!
             </div>
             <div class="text-subtitle2 text-grey-7">
               Panel de Control de Finanzas

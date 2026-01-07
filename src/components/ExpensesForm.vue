@@ -58,18 +58,6 @@
           :disable="loading"
         />
 
-        <!-- Selector de Método de Pago -->
-        <q-select
-          v-model="payMethod"
-          :options="payMethodOptions"
-          placeholder="Método"
-          dense
-          outlined
-          class="form-input payment-select"
-          :rules="[val => !!val || 'Requerido']"
-          :disable="loading"
-        />
-
         <!-- Botón de Agregar -->
         <q-btn
           type="submit"
@@ -77,7 +65,7 @@
           color="negative"
           dense
           unelevated
-          class="add-btn"
+          class="add-btn align-right"
           :loading="loading"
           :disable="loading"
         >
@@ -104,7 +92,6 @@ const amount = ref(null)
 const description = ref('')
 const categoryId = ref(null)
 const type = ref('Variable')
-const payMethod = ref('Efectivo')
 const loading = ref(false)
 const loadingCategories = ref(false)
 
@@ -113,9 +100,6 @@ const categoryOptions = ref([])
 
 // Opciones de tipo de gasto
 const typeOptions = ['Fijo', 'Variable']
-
-// Opciones de método de pago
-const payMethodOptions = ['Efectivo', 'Banco']
 
 // Carga las categorías desde Supabase
 const loadCategories = async () => {
@@ -148,7 +132,7 @@ const loadCategories = async () => {
 
 // Guarda un nuevo gasto en Supabase
 const handleSubmit = async () => {
-  if (!amount.value || !description.value || !categoryId.value || !type.value || !payMethod.value) return
+  if (!amount.value || !description.value || !categoryId.value || !type.value) return
 
   loading.value = true
   try {
@@ -160,8 +144,7 @@ const handleSubmit = async () => {
           amount: amount.value,
           description: description.value,
           category: categoryId.value,
-          type: type.value,
-          pay_method: payMethod.value
+          type: type.value
         }
       ])
 
@@ -181,7 +164,6 @@ const handleSubmit = async () => {
     amount.value = null
     description.value = ''
     type.value = 'Variable'
-    payMethod.value = 'Efectivo'
     // Mantener la categoría seleccionada
   } catch (error) {
     console.error('Error al guardar gasto:', error)
@@ -255,14 +237,6 @@ onMounted(() => {
 
   @media (max-width: 768px) {
     max-width: 100px;
-  }
-}
-
-.payment-select {
-  max-width: 110px;
-
-  @media (max-width: 768px) {
-    max-width: 90px;
   }
 }
 

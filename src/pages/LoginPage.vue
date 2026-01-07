@@ -111,23 +111,3 @@ const goToRegister = () => {
   router.push('/register')
 }
 </script>
-
-<style scoped lang="scss">
-.bg-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 450px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 600px) {
-  .login-card {
-    margin: 16px;
-  }
-}
-</style>

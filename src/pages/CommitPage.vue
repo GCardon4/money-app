@@ -3,17 +3,22 @@
     <div class="row q-col-gutter-md">
       <!-- Header -->
       <div class="col-12">
-        <div class="row items-center justify-between">
-          <div class="text-h4">
-            <q-icon name="event" color="primary" /> Compromisos Mensuales
+
+        <div class="row justify-between align-center">
+          <div class="text-h5 text-weight-bold col-md-4">
+            <q-icon name="event" color="positive" dense /> Compromisos 
           </div>
-          <q-btn
-            color="primary"
-            icon="add"
-            label="Nuevo Compromiso"
-            @click="showDialog = true"
-          />
-        </div>
+
+            <div class="col-md-6 text-right">
+                <q-btn
+                color="primary"
+                icon="add"
+                label="Nuevo "
+                @click="showDialog = true"
+            />
+            </div>
+          </div>
+          
       </div>
 
       <!-- Estadísticas rápidas -->
@@ -43,25 +48,23 @@
       <div class="col-12">
         <q-card flat bordered>
           <q-card-section>
-            <div class="text-h6 q-mb-md">Listado de Compromisos</div>
+            <div class="text-h6 q-mb-md title-incomes">Listado de Compromisos</div>
             
             <q-list separator v-if="financeStore.commitments.length > 0">
-              <q-item v-for="commitment in financeStore.commitments" :key="commitment.id">
-                <q-item-section avatar>
-                  <q-avatar 
-                    :color="commitment.status === 'active' ? 'primary' : 'grey'" 
-                    text-color="white" 
-                    icon="event"
-                  />
-                </q-item-section>
-
+              <q-item 
+                v-for="commitment in financeStore.commitments" 
+                :key="commitment.id"
+                clickable
+                v-ripple
+                @click="editCommitment(commitment)"
+              >
                 <q-item-section>
-                  <q-item-label>{{ commitment.name }}</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ commitment.name }}</q-item-label>
                   <q-item-label caption>
                     {{ commitment.description }}
                   </q-item-label>
                   <q-item-label caption>
-                    Día {{ commitment.payment_day }} • {{ commitment.pay_method }}
+                    Día {{ formatPayDate(commitment.pay_date) }}
                   </q-item-label>
                 </q-item-section>
 
@@ -71,47 +74,9 @@
                       ${{ formatAmount(commitment.amount) }}
                     </q-item-label>
                     <q-badge 
-                      :color="commitment.status === 'active' ? 'positive' : 'grey'" 
-                      :label="commitment.status === 'active' ? 'Activo' : 'Inactivo'"
+                      :color="commitment.status ? 'positive' : 'grey'" 
+                      :label="commitment.status ? 'Activo' : 'Inactivo'"
                     />
-                  </div>
-                </q-item-section>
-
-                <q-item-section side>
-                  <div class="row q-gutter-xs">
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="edit"
-                      color="primary"
-                      size="sm"
-                      @click="editCommitment(commitment)"
-                    >
-                      <q-tooltip>Editar</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      :icon="commitment.status === 'active' ? 'pause' : 'play_arrow'"
-                      :color="commitment.status === 'active' ? 'warning' : 'positive'"
-                      size="sm"
-                      @click="toggleStatus(commitment)"
-                    >
-                      <q-tooltip>{{ commitment.status === 'active' ? 'Desactivar' : 'Activar' }}</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="delete"
-                      color="negative"
-                      size="sm"
-                      @click="confirmDelete(commitment)"
-                    >
-                      <q-tooltip>Eliminar</q-tooltip>
-                    </q-btn>
                   </div>
                 </q-item-section>
               </q-item>
@@ -127,7 +92,7 @@
 
     <!-- Dialog para Agregar/Editar Compromiso -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 400px">
+      <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">{{ editMode ? 'Editar' : 'Nuevo' }} Compromiso</div>
         </q-card-section>
@@ -176,24 +141,13 @@
               class="q-mb-md"
               min="1"
               max="31"
-              hint="Día del mes (1-31)"
-            />
-
-            <q-select
-              v-model="form.pay_method"
-              :options="payMethodOptions"
-              label="Método de Pago"
-              outlined
-              :rules="[val => !!val || 'Requerido']"
-              class="q-mb-md"
+              hint="Día del mes para el pago (1-31)"
             />
 
             <q-toggle
               v-model="form.status"
               label="Activo"
               color="positive"
-              true-value="active"
-              false-value="inactive"
               class="q-mb-md"
             />
 
@@ -236,9 +190,6 @@ const showDialog = ref(false)
 const editMode = ref(false)
 const loading = ref(false)
 
-// Opciones de método de pago
-const payMethodOptions = ['Efectivo', 'Banco']
-
 // Formulario
 const form = ref({
   id: null,
@@ -246,13 +197,12 @@ const form = ref({
   description: '',
   amount: null,
   payment_day: 1,
-  pay_method: 'Banco',
-  status: 'active'
+  status: true
 })
 
 // Compromisos activos
 const activeCommitments = computed(() => {
-  return financeStore.commitments.filter(c => c.status === 'active')
+  return financeStore.commitments.filter(c => c.status === true)
 })
 
 // Total mensual de compromisos activos
@@ -266,17 +216,28 @@ const formatAmount = (amount) => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+// Formatea la fecha de pago para mostrar solo el día
+const formatPayDate = (dateString) => {
+  if (!dateString) return 'Sin fecha'
+  // Extraer el día directamente del string de fecha (formato YYYY-MM-DD)
+  const dateParts = dateString.split('T')[0].split('-')
+  return parseInt(dateParts[2], 10)
+}
+
 // Guarda o actualiza un compromiso
 const saveCommitment = async () => {
   loading.value = true
   try {
+    // Construir fecha con el día especificado del mes actual
+    const today = new Date()
+    const payDate = new Date(today.getFullYear(), today.getMonth(), form.value.payment_day)
+    
     const commitmentData = {
       user_id: authStore.user.id,
       name: form.value.name,
       description: form.value.description,
       amount: form.value.amount,
-      payment_day: form.value.payment_day,
-      pay_method: form.value.pay_method,
+      pay_date: payDate.toISOString(),
       status: form.value.status
     }
 
@@ -328,79 +289,10 @@ const editCommitment = (commitment) => {
     name: commitment.name,
     description: commitment.description || '',
     amount: commitment.amount,
-    payment_day: commitment.payment_day,
-    pay_method: commitment.pay_method,
+    payment_day: formatPayDate(commitment.pay_date),
     status: commitment.status
   }
   showDialog.value = true
-}
-
-// Alterna el estado activo/inactivo
-const toggleStatus = async (commitment) => {
-  try {
-    const newStatus = commitment.status === 'active' ? 'inactive' : 'active'
-    
-    const { error } = await supabase
-      .from('commitments')
-      .update({ status: newStatus })
-      .eq('id', commitment.id)
-
-    if (error) throw error
-
-    await financeStore.loadCommitments()
-
-    $q.notify({
-      type: 'info',
-      message: `Compromiso ${newStatus === 'active' ? 'activado' : 'desactivado'}`,
-      position: 'top'
-    })
-  } catch (error) {
-    console.error('Error al cambiar estado:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'Error al cambiar el estado',
-      position: 'top'
-    })
-  }
-}
-
-// Confirma la eliminación de un compromiso
-const confirmDelete = (commitment) => {
-  $q.dialog({
-    title: 'Confirmar',
-    message: '¿Estás seguro de eliminar este compromiso?',
-    cancel: true,
-    persistent: true
-  }).onOk(async () => {
-    await deleteCommitment(commitment.id)
-  })
-}
-
-// Elimina un compromiso
-const deleteCommitment = async (id) => {
-  try {
-    const { error } = await supabase
-      .from('commitments')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-
-    await financeStore.loadCommitments()
-
-    $q.notify({
-      type: 'positive',
-      message: 'Compromiso eliminado',
-      position: 'top'
-    })
-  } catch (error) {
-    console.error('Error al eliminar compromiso:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'Error al eliminar el compromiso',
-      position: 'top'
-    })
-  }
 }
 
 // Cierra el diálogo y resetea el formulario
@@ -413,8 +305,7 @@ const closeDialog = () => {
     description: '',
     amount: null,
     payment_day: 1,
-    pay_method: 'Banco',
-    status: 'active'
+    status: true
   }
 }
 

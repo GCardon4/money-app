@@ -24,7 +24,7 @@
       <div class="col-12">
         <q-card flat bordered>
           <q-card-section>
-            <div class="text-h6 q-mb-md">Historial de Gastos</div>
+            <div class="text-h6 q-mb-md title-incomes">Historial de Gastos</div>
             
             <ul v-if="financeStore.expenses.length > 0" class="expenses-list">
               <li 
@@ -32,27 +32,30 @@
                 :key="expense.id"
                 class="expense-item"
               >
-                <div class="expense-category">
-                  <q-chip 
-                    :color="getCategoryColor(expense.category)" 
-                    text-color="white" 
-                    dense
-                    size="sm"
-                  >
-                    {{ getCategoryName(expense.category) }}
-                  </q-chip>
+                
+                
+                <div class="row q-mb-xs items-center">
+                    <div class="col-auto q-mr-sm">
+                        <q-chip 
+                            :color="getCategoryColor(expense.category)" 
+                            text-color="white" 
+                            dense
+                            size="sm"
+                        >
+                            {{ getCategoryName(expense.category) }}
+                        </q-chip>
+                    </div>
+                    <div class="col">{{ expense.description }}</div>
+                    <div class="col-auto text-negative text-weight-bold">
+                        ${{ formatAmount(expense.amount) }}
+                    </div>
                 </div>
                 
-                <div class="expense-details">
-                  <div class="expense-description">{{ expense.description }}</div>
-                  <div class="expense-meta text-grey-7">
-                    {{ expense.type }} • {{ expense.pay_method }} • {{ formatDate(expense.created_at) }}
-                  </div>
+                <div class="expense-meta text-grey-7 row">
+                  {{ expense.type }} • {{ formatDate(expense.created_at) }}
                 </div>
                 
-                <div class="expense-amount text-negative text-weight-bold">
-                  ${{ formatAmount(expense.amount) }}
-                </div>
+                
               </li>
             </ul>
 
@@ -125,78 +128,3 @@ onMounted(async () => {
   await financeStore.loadExpenses()
 })
 </script>
-
-<style scoped lang="scss">
-.expenses-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.expense-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.expense-category {
-  flex-shrink: 0;
-}
-
-.expense-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.expense-description {
-  font-weight: 500;
-  font-size: 15px;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.expense-meta {
-  font-size: 12px;
-}
-
-.expense-amount {
-  flex-shrink: 0;
-  font-size: 16px;
-  text-align: right;
-  min-width: 100px;
-}
-
-@media (max-width: 600px) {
-  .expense-item {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .expense-category {
-    width: 100%;
-  }
-
-  .expense-details {
-    width: 100%;
-  }
-
-  .expense-amount {
-    width: 100%;
-    text-align: left;
-    font-size: 18px;
-  }
-}
-</style>
