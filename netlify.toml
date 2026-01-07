@@ -23,9 +23,6 @@
     Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "public, max-age=0, must-revalidate"
     Service-Worker-Allowed = "/"
-  [headers.values]
-    Content-Type = "application/javascript"
-    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/*"
