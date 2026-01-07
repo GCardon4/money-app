@@ -10,6 +10,8 @@
 - ✅ Estrategias de caché configuradas (NetworkFirst, CacheFirst, StaleWhileRevalidate)
 - ✅ Notificaciones push implementadas
 - ✅ Icons en todos los tamaños (128x128 a 512x512)
+- ✅ Build configurado para modo PWA (`quasar build -m pwa`)
+- ✅ Directorio de publicación: `dist/pwa`
 
 #### Archivos de Netlify
 - ✅ `netlify.toml` - Configuración principal de build y headers
@@ -20,10 +22,12 @@
 ```json
 {
   "command": "npm run build",
-  "publish": "dist/spa",
+  "publish": "dist/pwa",
   "node": "20"
 }
 ```
+
+**IMPORTANTE:** El comando `npm run build` ahora ejecuta `quasar build -m pwa` que genera la PWA completa en `dist/pwa`.
 
 ### 🚀 Pasos para Deploy
 
