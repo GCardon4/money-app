@@ -18,84 +18,70 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue' // Importa ref, onBeforeUnmount
-import { useRouter } from 'vue-router'
-import { supabase } from 'boot/supabase'
-import { useQuasar } from 'quasar'; // Importa useQuasar para notificaciones
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
+import { useQuasar } from 'quasar'
+import { useAuthStore } from 'stores/authStore'
 
 defineOptions({
   name: 'App'
 });
 
-const router = useRouter();
-const $q = useQuasar(); // Instancia de Quasar para notificaciones
 
-const deferredPrompt = ref(null); // Guarda el evento 'beforeinstallprompt'
-const showInstallPrompt = ref(false); // Controla la visibilidad del banner
+const $q = useQuasar()
+const authStore = useAuthStore()
 
-onMounted(() => {
-  // Lógica de autenticación de Supabase (ya existente)
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (!session) {
-      // Solo redirige si no estamos ya en la página de login
-      if (router.currentRoute.value.name !== 'login') {
-        router.push({ name: 'login' });
-      }
-    }
-    // Puedes añadir lógica para 'SIGNED_IN' si necesitas hacer algo específico al iniciar sesión.
-    // else if (event === 'SIGNED_IN' && router.currentRoute.value.name === 'login') {
-    //   router.push({ name: 'home' });
-    // }
-  });
+const deferredPrompt = ref(null)
+const showInstallPrompt = ref(false)
+
+onMounted(async () => {
+  // Inicializa la autenticación con el store
+  await authStore.initializeAuth()
 
   // Lógica para detectar PWA instalable
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Evita que el navegador muestre su propio banner de instalación
-    deferredPrompt.value = e; // Guarda el evento para usarlo más tarde
-    showInstallPrompt.value = true; // Muestra tu banner personalizado
-    console.log('Evento beforeinstallprompt detectado. PWA es instalable.');
-  });
+    e.preventDefault()
+    deferredPrompt.value = e
+    showInstallPrompt.value = true
+    console.log('Evento beforeinstallprompt detectado. PWA es instalable.')
+  })
 
   // Lógica para detectar cuando la PWA ya ha sido instalada
   window.addEventListener('appinstalled', () => {
-    showInstallPrompt.value = false; // Oculta el banner si ya se instaló
-    deferredPrompt.value = null; // Limpia el evento
-    console.log('PWA instalada con éxito.');
-    $q.notify({ type: 'positive', message: '¡App-Stock se ha instalado en tu dispositivo!' });
-  });
-});
+    showInstallPrompt.value = false
+    deferredPrompt.value = null
+    console.log('PWA instalada con éxito.')
+    $q.notify({ type: 'positive', message: '¡Money App se ha instalado en tu dispositivo!' })
+  })
+})
 
 onBeforeUnmount(() => {
-  // Limpia los event listeners al desmontar el componente para evitar fugas de memoria
-  window.removeEventListener('beforeinstallprompt', () => {});
-  window.removeEventListener('appinstalled', () => {});
-});
+  // Limpia los event listeners al desmontar el componente
+  window.removeEventListener('beforeinstallprompt', () => {})
+  window.removeEventListener('appinstalled', () => {})
+})
 
 // Función para disparar la instalación de la PWA
 const installPWA = async () => {
   if (deferredPrompt.value) {
-    deferredPrompt.value.prompt(); // Muestra el diálogo de instalación del navegador
-    const { outcome } = await deferredPrompt.value.userChoice; // Espera la respuesta del usuario
+    deferredPrompt.value.prompt()
+    const { outcome } = await deferredPrompt.value.userChoice
 
     if (outcome === 'accepted') {
-      console.log('Usuario aceptó la instalación de la PWA.');
-      // El evento 'appinstalled' se encargará de ocultar el banner y notificar
+      console.log('Usuario aceptó la instalación de la PWA.')
     } else {
-      console.log('Usuario canceló la instalación de la PWA.');
-      showInstallPrompt.value = false; // Oculta el banner si el usuario cancela
+      console.log('Usuario canceló la instalación de la PWA.')
+      showInstallPrompt.value = false
     }
-    deferredPrompt.value = null; // El prompt solo se puede usar una vez
+    deferredPrompt.value = null
   } else {
-    console.log('PWA no instalable o prompt ya fue disparado/usado.');
-    // Si no hay prompt diferido, el usuario ya instaló o el navegador no lo soporta.
-    // Para iOS, se debe guiar al usuario a "Añadir a pantalla de inicio".
+    console.log('PWA no instalable o prompt ya fue disparado/usado.')
     $q.notify({
       type: 'info',
       message: 'Usa la opción "Añadir a pantalla de inicio" de tu navegador para instalar.',
       position: 'top',
       timeout: 3000
-    });
+    })
   }
-};
+}
 </script>

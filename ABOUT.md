@@ -135,16 +135,17 @@ Gráficos recomendados:
  ├── assets
  ├── boot
  ├── components
+ │   └── ExpensesForm.vue
  ├── layouts
  │   └── MainLayout.vue
  ├── pages
  │   ├── LoginPage.vue
  │   ├── RegisterPage.vue
  │   ├── DashboardPage.vue
- │   ├── IngresosPage.vue
- │   ├── GastosPage.vue
- │   ├── DeudasPage.vue
- │   └── CompromisosPage.vue
+ │   ├── IncomesPage.vue
+ │   ├── ExpensesPage.vue
+ │   ├── DebtsPage.vue
+ │   └── CommitPage.vue
  ├── router
  ├── stores
  │   ├── authStore.js
@@ -174,7 +175,7 @@ Gestionado por Supabase Auth.
 
 * id
 * user_id
-* date
+* created_at
 * amount
 * source
 * category
@@ -185,7 +186,7 @@ Gestionado por Supabase Auth.
 
 * id
 * user_id
-* date
+* created_at
 * amount
 * category
 * type
@@ -210,6 +211,20 @@ Gestionado por Supabase Auth.
 * frecuency
 * pay_date
 * status
+
+
+#### source_incomes
+
+* id
+* created_at
+* name
+
+
+#### category_expenses
+
+* id
+* created_at
+* name
 
 ---
 

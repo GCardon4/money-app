@@ -19,6 +19,9 @@ Aplicación personal para el control y análisis de movimientos financieros, cen
 - Expenses (expenses) / Egresos y Gastos diarios
 - Debts (debts) / Administra y crea las deudas
 - Commitments (commitments) / Gastos Mensuales
+- Category Expenses (category_expenses) / Categoria de los gatos
+- Sources Incomes (source_incomes) / Fuente de los ingresos
+
 
 ### Funcionalidades Principales
 
