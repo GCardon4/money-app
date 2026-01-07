@@ -142,7 +142,7 @@ export default defineConfig((/* ctx */) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      workboxMode: 'InjectManifest', // Cambiar a InjectManifest para usar custom service worker
       injectPwaMetaTags: true,
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',
@@ -152,56 +152,14 @@ export default defineConfig((/* ctx */) => {
         json.id = '/?standalone=true'
         json.prefer_related_applications = false
         json.related_applications = []
+        json.start_url = '/'
+        json.scope = '/'
+        json.display = 'standalone'
       },
-      workboxOptions: {
-        skipWaiting: true,
-        clientsClaim: true,
-        cleanupOutdatedCaches: true
-      },
-      // Extender las opciones de GenerateSW para mejor caché
-      extendGenerateSWOptions (cfg) {
+      // extendInjectManifestOptions en lugar de extendGenerateSWOptions
+      extendInjectManifestOptions (cfg) {
         Object.assign(cfg, {
-          cleanupOutdatedCaches: true,
-          skipWaiting: true,
-          clientsClaim: true,
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/bseecefypuqlratyegos\.supabase\.co\/.*$/,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'supabase-api',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 24 * 60 * 60 // 24 horas
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'images-cache',
-                expiration: {
-                  maxEntries: 60,
-                  maxAgeSeconds: 30 * 24 * 60 * 60 // 30 días
-                }
-              }
-            },
-            {
-              urlPattern: /\.(?:js|css)$/,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'static-resources',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 7 * 24 * 60 * 60 // 7 días
-                }
-              }
-            }
-          ]
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff,woff2}']
         })
       }
     },

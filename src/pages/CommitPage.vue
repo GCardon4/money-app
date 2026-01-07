@@ -180,6 +180,7 @@ import { useQuasar } from 'quasar'
 import { supabase } from 'boot/supabase'
 import { useAuthStore } from 'stores/authStore'
 import { useFinanceStore } from 'stores/financeStore'
+import { scheduleCommitmentNotifications } from 'src/utils/notifications'
 
 const $q = useQuasar()
 const authStore = useAuthStore()
@@ -261,6 +262,16 @@ const saveCommitment = async () => {
     if (error) throw error
 
     await financeStore.loadCommitments()
+
+    // Programar notificaciones para el compromiso
+    if (form.value.status) {
+      const commitmentData = {
+        ...form.value,
+        id: editMode.value ? form.value.id : null,
+        pay_date: payDate.toISOString()
+      }
+      await scheduleCommitmentNotifications(commitmentData)
+    }
 
     $q.notify({
       type: 'positive',

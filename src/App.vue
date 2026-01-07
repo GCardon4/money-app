@@ -19,9 +19,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'stores/authStore'
+import { scheduleAllCommitments, checkDailyNotifications } from 'src/utils/notifications'
 
 defineOptions({
   name: 'App'
@@ -37,6 +37,12 @@ const showInstallPrompt = ref(false)
 onMounted(async () => {
   // Inicializa la autenticación con el store
   await authStore.initializeAuth()
+
+  // Programa notificaciones si el usuario está autenticado
+  if (authStore.user) {
+    await scheduleAllCommitments(authStore.user.id)
+    await checkDailyNotifications(authStore.user.id)
+  }
 
   // Lógica para detectar PWA instalable
   window.addEventListener('beforeinstallprompt', (e) => {
