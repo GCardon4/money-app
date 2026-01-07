@@ -98,10 +98,12 @@ import { useQuasar } from 'quasar'
 import { supabase } from 'boot/supabase'
 import { useAuthStore } from 'stores/authStore'
 import { useFinanceStore } from 'stores/financeStore'
+import { useSyncStore } from 'stores/syncStore'
 
 const $q = useQuasar()
 const authStore = useAuthStore()
 const financeStore = useFinanceStore()
+const syncStore = useSyncStore()
 
 // Estados del formulario
 const amount = ref(null)
@@ -150,43 +152,61 @@ const loadCategories = async () => {
   }
 }
 
-// Guarda un nuevo gasto en Supabase
+// Guarda un nuevo gasto (con soporte offline)
 const handleSubmit = async () => {
   if (!amount.value || !description.value || !categoryId.value || !type.value || !payMethod.value) return
 
   loading.value = true
   try {
-    const { error } = await supabase
-      .from('expenses')
-      .insert([
-        {
-          user_id: authStore.user.id,
-          amount: amount.value,
-          description: description.value,
-          category: categoryId.value,
-          type: type.value,
-          pay_method: payMethod.value
-        }
-      ])
+    const expenseData = {
+      amount: amount.value,
+      description: description.value,
+      category: categoryId.value,
+      type: type.value,
+      pay_method: payMethod.value
+    }
 
-    if (error) throw error
-
-    // Recargar los gastos para actualizar el dashboard
-    await financeStore.loadExpenses()
-
-    $q.notify({
-      type: 'positive',
-      message: 'Gasto agregado correctamente',
-      position: 'top',
-      timeout: 2000
+    // Usar sincronización offline
+    const result = await syncStore.executeOperation({
+      type: 'insert',
+      table: 'expenses',
+      data: expenseData
     })
+
+    if (result.offline) {
+      // Agregar temporalmente a la lista local
+      financeStore.addExpense({
+        ...expenseData,
+        id: result.tempId,
+        user_id: authStore.user.id,
+        created_at: new Date().toISOString(),
+        _pending: true
+      })
+
+      $q.notify({
+        type: 'warning',
+        message: `Gasto guardado localmente (${syncStore.pendingCount} pendientes)`,
+        icon: 'cloud_off',
+        position: 'top',
+        timeout: 3000
+      })
+    } else {
+      // Recargar desde servidor
+      await financeStore.loadExpenses()
+
+      $q.notify({
+        type: 'positive',
+        message: 'Gasto agregado correctamente',
+        position: 'top',
+        timeout: 2000
+      })
+    }
 
     // Limpiar formulario
     amount.value = null
     description.value = ''
     payMethod.value = 'Efectivo'
     type.value = 'Variable'
-    // Mantener la categoría seleccionada
   } catch (error) {
     console.error('Error al guardar gasto:', error)
     $q.notify({

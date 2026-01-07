@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { supabase } from 'boot/supabase'
 import { useAuthStore } from './authStore'
+import { useSyncStore } from './syncStore'
 
 export const useFinanceStore = defineStore('finance', {
   state: () => ({
@@ -57,6 +58,7 @@ export const useFinanceStore = defineStore('finance', {
     // Carga todos los gastos del usuario
     async loadExpenses() {
       const authStore = useAuthStore()
+      const syncStore = useSyncStore()
       if (!authStore.user) return
 
       try {
@@ -68,14 +70,25 @@ export const useFinanceStore = defineStore('finance', {
 
         if (error) throw error
         this.expenses = data || []
+        
+        // Cachea los datos para uso offline
+        await syncStore.cacheTableData('expenses', data)
       } catch (error) {
         console.error('Error cargando gastos:', error)
+        
+        // Si falla, intenta cargar desde caché
+        const cached = await syncStore.getCachedTableData('expenses')
+        if (cached) {
+          console.log('📂 Cargando gastos desde caché')
+          this.expenses = cached
+        }
       }
     },
 
     // Carga todos los ingresos del usuario
     async loadIncomes() {
       const authStore = useAuthStore()
+      const syncStore = useSyncStore()
       if (!authStore.user) return
 
       try {
@@ -87,14 +100,25 @@ export const useFinanceStore = defineStore('finance', {
 
         if (error) throw error
         this.incomes = data || []
+        
+        // Cachea los datos para uso offline
+        await syncStore.cacheTableData('incomes', data)
       } catch (error) {
         console.error('Error cargando ingresos:', error)
+        
+        // Si falla, intenta cargar desde caché
+        const cached = await syncStore.getCachedTableData('incomes')
+        if (cached) {
+          console.log('📂 Cargando ingresos desde caché')
+          this.incomes = cached
+        }
       }
     },
 
     // Carga todas las deudas del usuario
     async loadDebts() {
       const authStore = useAuthStore()
+      const syncStore = useSyncStore()
       if (!authStore.user) return
 
       try {
@@ -106,14 +130,25 @@ export const useFinanceStore = defineStore('finance', {
 
         if (error) throw error
         this.debts = data || []
+        
+        // Cachea los datos para uso offline
+        await syncStore.cacheTableData('debts', data)
       } catch (error) {
         console.error('Error cargando deudas:', error)
+        
+        // Si falla, intenta cargar desde caché
+        const cached = await syncStore.getCachedTableData('debts')
+        if (cached) {
+          console.log('📂 Cargando deudas desde caché')
+          this.debts = cached
+        }
       }
     },
 
     // Carga todos los compromisos del usuario
     async loadCommitments() {
       const authStore = useAuthStore()
+      const syncStore = useSyncStore()
       if (!authStore.user) return
 
       try {
@@ -125,8 +160,18 @@ export const useFinanceStore = defineStore('finance', {
 
         if (error) throw error
         this.commitments = data || []
+        
+        // Cachea los datos para uso offline
+        await syncStore.cacheTableData('commitments', data)
       } catch (error) {
         console.error('Error cargando compromisos:', error)
+        
+        // Si falla, intenta cargar desde caché
+        const cached = await syncStore.getCachedTableData('commitments')
+        if (cached) {
+          console.log('📂 Cargando compromisos desde caché')
+          this.commitments = cached
+        }
       }
     },
 

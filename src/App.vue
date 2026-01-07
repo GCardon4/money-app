@@ -1,5 +1,8 @@
 <template>
   <router-view />
+  
+  <!-- Estado de sincronización -->
+  <sync-status />
 
   <!-- Banner de instalación de PWA -->
   <q-banner
@@ -19,7 +22,9 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'stores/authStore'
+import { useSyncStore } from 'stores/syncStore'
 import { scheduleAllCommitments, checkDailyNotifications } from 'src/utils/notifications'
+import SyncStatus from 'components/SyncStatus.vue'
 
 defineOptions({
   name: 'App'
@@ -27,6 +32,7 @@ defineOptions({
 
 const $q = useQuasar()
 const authStore = useAuthStore()
+const syncStore = useSyncStore()
 
 const deferredPrompt = ref(null)
 const showInstallPrompt = ref(false)
@@ -109,10 +115,19 @@ onMounted(async () => {
   // Inicializa la autenticación con el store
   await authStore.initializeAuth()
 
+  // Inicializa el sistema de sincronización offline
+  syncStore.setupConnectionListeners()
+  await syncStore.updatePendingCount()
+
   // Programa notificaciones si el usuario está autenticado
   if (authStore.user) {
     await scheduleAllCommitments(authStore.user.id)
     await checkDailyNotifications(authStore.user.id)
+    
+    // Sincroniza operaciones pendientes si hay conexión
+    if (syncStore.isOnline) {
+      await syncStore.syncPendingOperations()
+    }
   }
 
   // Verificar si ya está instalado
