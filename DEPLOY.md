@@ -10,8 +10,9 @@
 - ✅ Estrategias de caché configuradas (NetworkFirst, CacheFirst, StaleWhileRevalidate)
 - ✅ Notificaciones push implementadas
 - ✅ Icons en todos los tamaños (128x128 a 512x512)
-- ✅ Build configurado para modo PWA (`quasar build -m pwa`)
+- ✅ Build configurado para modo PWA (`npm run build:pwa`)
 - ✅ Directorio de publicación: `dist/pwa`
+- ✅ HTTPS obligatorio para PWA (Netlify lo provee automáticamente)
 
 #### Archivos de Netlify
 - ✅ `netlify.toml` - Configuración principal de build y headers
@@ -19,15 +20,20 @@
 - ✅ `public/_redirects` - Redirecciones para SPA routing
 
 #### Build Configuration
-```json
-{
-  "command": "npm run build",
-  "publish": "dist/pwa",
-  "node": "20"
-}
+```toml
+[build]
+  command = "npm run build:pwa"
+  publish = "dist/pwa"
+  
+[build.environment]
+  NODE_VERSION = "20"
 ```
 
-**IMPORTANTE:** El comando `npm run build` ahora ejecuta `quasar build -m pwa` que genera la PWA completa en `dist/pwa`.
+**IMPORTANTE:** 
+- El comando `npm run build:pwa` ejecuta `quasar build -m pwa`
+- PWA requiere HTTPS (Netlify lo provee automáticamente)
+- El evento `beforeinstallprompt` solo se dispara en Chrome/Edge con HTTPS
+- En desarrollo con `quasar dev -m pwa` funciona correctamente
 
 ### 🚀 Pasos para Deploy
 
@@ -95,16 +101,25 @@ Verificar en: http://localhost:3000
 **Service Worker no se registra:**
 - Verificar que el sitio esté en HTTPS (Netlify lo provee automáticamente)
 - Check en DevTools → Application → Service Workers
+- Verificar que `sw.js` sea accesible: `https://tu-dominio.netlify.app/sw.js`
 
-**PWA no se puede instalar:**
-- Verificar manifest.json en DevTools
+**PWA no se puede instalar (banner no aparece):**
+- Verificar manifest.json en DevTools → Application → Manifest
 - Asegurar que todos los íconos existan en `/icons/`
-- Verificar que display sea "standalone" o "fullscreen"
+- Verificar que display sea "standalone" en manifest
+- **IMPORTANTE:** El banner solo aparece en Chrome/Edge con HTTPS
+- En Safari iOS no hay banner (usar "Añadir a pantalla de inicio")
+- Verificar en Console los logs: "✅ Evento beforeinstallprompt capturado!"
 
 **Notificaciones no funcionan:**
 - Verificar permisos de notificación en el navegador
 - Check que el service worker esté activo
 - Verificar en DevTools → Application → Notifications
+
+**Build falla en Netlify:**
+- Verificar que el comando sea `npm run build:pwa`
+- Check logs de Netlify para ver errores específicos
+- Verificar que Node version sea 20 en build.environment
 
 ### 📊 Performance
 

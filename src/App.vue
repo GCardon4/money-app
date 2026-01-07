@@ -13,18 +13,6 @@
     <q-btn flat label="Instalar" @click="installPWA" class="text-white q-ml-md" />
     <q-btn flat round icon="close" @click="dismissBanner" class="text-white q-ml-sm" />
   </q-banner>
-
-  <!-- Botón flotante alternativo para instalación (iOS o fallback) -->
-  <q-btn
-    v-if="canShowManualInstall && !showInstallPrompt"
-    fab
-    icon="get_app"
-    color="primary"
-    @click="showManualInstallDialog"
-    style="position: fixed; bottom: 80px; right: 20px; z-index: 9998;"
-  >
-    <q-tooltip>Instalar App</q-tooltip>
-  </q-btn>
 </template>
 
 <script setup>
@@ -42,7 +30,6 @@ const authStore = useAuthStore()
 
 const deferredPrompt = ref(null)
 const showInstallPrompt = ref(false)
-const canShowManualInstall = ref(false)
 const isStandalone = ref(false)
 
 // Detecta si ya está instalado
@@ -137,27 +124,6 @@ onMounted(async () => {
     return
   }
 
-  const { isIOS } = detectDevice()
-  console.log('Dispositivo detectado - iOS:', isIOS)
-
-  // En iOS/Safari mostrar botón manual (no soportan beforeinstallprompt)
-  if (isIOS) {
-    console.log('iOS detectado - mostrando botón manual de instalación')
-    canShowManualInstall.value = true
-  }
-
-  // Detectar si no se ha rechazado previamente
-  const dismissed = localStorage.getItem('pwa-install-dismissed')
-  if (dismissed) {
-    console.log('Banner de instalación fue previamente rechazado')
-    const dismissedTime = parseInt(dismissed)
-    const daysSince = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24)
-    if (daysSince > 7) {
-      localStorage.removeItem('pwa-install-dismissed')
-      canShowManualInstall.value = true
-    }
-  }
-
   // Lógica para detectar PWA instalable (Chrome, Edge, Android)
   window.addEventListener('beforeinstallprompt', (e) => {
     console.log('✅ Evento beforeinstallprompt capturado!')
@@ -170,7 +136,6 @@ onMounted(async () => {
   window.addEventListener('appinstalled', () => {
     console.log('✅ PWA instalada con éxito')
     showInstallPrompt.value = false
-    canShowManualInstall.value = false
     deferredPrompt.value = null
     $q.notify({ 
       type: 'positive', 
@@ -179,14 +144,6 @@ onMounted(async () => {
       position: 'top'
     })
   })
-
-  // Mostrar botón manual si no se dispara el evento después de 3 segundos
-  setTimeout(() => {
-    if (!showInstallPrompt.value && !isIOS && !alreadyInstalled) {
-      console.log('beforeinstallprompt no se disparó - mostrando botón manual')
-      canShowManualInstall.value = true
-    }
-  }, 3000)
 })
 
 onBeforeUnmount(() => {

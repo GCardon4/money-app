@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:pwa"
   publish = "dist/pwa"
 
 [[redirects]]
@@ -9,6 +9,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [[headers]]
   for = "/manifest.json"
@@ -18,6 +19,10 @@
 
 [[headers]]
   for = "/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
   [headers.values]
     Content-Type = "application/javascript"
     Cache-Control = "public, max-age=0, must-revalidate"

@@ -25,12 +25,13 @@
       <div class="col-12 col-sm-6">
         <q-card flat bordered>
           <q-card-section>
-            <div class="text-subtitle2 text-grey-7">Total Mensual</div>
+            <div class="text-subtitle2 text-grey-7">Total Mensual /
+                <span class="text-right">
+                     {{ activeCommitments.length }}
+                </span>
+            </div>
             <div class="text-h5 text-primary text-weight-bold">
               ${{ formatAmount(totalMonthly) }}
-            </div>
-            <div class="text-h5 text-primary text-caption">
-              {{ activeCommitments.length }}
             </div>
           </q-card-section>
         </q-card>
