@@ -69,14 +69,21 @@ export const useSyncStore = defineStore('sync', () => {
     }
   }
 
-  // Verifica si realmente hay conexión haciendo un ping a Supabase
+  // Verifica si realmente hay conexión haciendo un ping rápido a Supabase
   const checkRealConnection = async () => {
     try {
-      const { error } = await supabase
+      // Timeout de 5 segundos para la verificación
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 5000)
+      )
+      
+      const checkPromise = supabase
         .from('profiles')
         .select('id')
         .limit(1)
         .maybeSingle()
+      
+      const { error } = await Promise.race([checkPromise, timeout])
       
       return !error || error.code !== 'PGRST301'
     } catch (error) {
@@ -87,39 +94,57 @@ export const useSyncStore = defineStore('sync', () => {
 
   // Ejecuta una operación con manejo de offline
   const executeOperation = async (operation) => {
-    if (!isOnline.value) {
-      console.log('📴 Modo offline - agregando a cola:', operation.type)
+    // Primera verificación rápida con navigator.onLine
+    if (!navigator.onLine) {
+      console.log('📴 Modo offline detectado - agregando a cola:', operation.type)
       await addToSyncQueue(operation)
       await updatePendingCount()
       return { success: true, offline: true, tempId: `temp_${Date.now()}` }
     }
 
+    // Intentar ejecutar la operación
     try {
       const result = await performOperation(operation)
       return { success: true, data: result }
     } catch (error) {
-      console.error('❌ Error en operación, agregando a cola:', error)
-      await addToSyncQueue(operation)
-      await updatePendingCount()
-      return { success: true, offline: true, tempId: `temp_${Date.now()}` }
+      console.error('❌ Error en operación:', error.message)
+      
+      // Si es error de timeout o red, agregar a cola
+      if (error.message === 'Timeout' || error.message === 'Failed to fetch' || !navigator.onLine) {
+        console.log('📴 Error de conexión - agregando a cola')
+        await addToSyncQueue(operation)
+        await updatePendingCount()
+        isOnline.value = false // Marcar como offline
+        return { success: true, offline: true, tempId: `temp_${Date.now()}` }
+      }
+      
+      // Si es otro tipo de error, lanzarlo
+      throw error
     }
   }
 
-  // Ejecuta la operación real en Supabase
+  // Ejecuta la operación real en Supabase con timeout
   const performOperation = async (operation) => {
     const { type, table, data, id } = operation
     const authStore = useAuthStore()
+
+    // Timeout de 10 segundos
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 10000)
+    )
 
     let result
 
     switch (type) {
       case 'insert': {
         const insertData = { ...data, user_id: authStore.user.id }
-        const { data: inserted, error: insertError } = await supabase
+        const operationPromise = supabase
           .from(table)
           .insert(insertData)
           .select()
           .single()
+        
+        const { data: inserted, error: insertError } = await Promise.race([operationPromise, timeout])
         
         if (insertError) throw insertError
         result = inserted
@@ -127,12 +152,14 @@ export const useSyncStore = defineStore('sync', () => {
       }
 
       case 'update': {
-        const { data: updated, error: updateError } = await supabase
+        const operationPromise = supabase
           .from(table)
           .update(data)
           .eq('id', id)
           .select()
           .single()
+        
+        const { data: updated, error: updateError } = await Promise.race([operationPromise, timeout])
         
         if (updateError) throw updateError
         result = updated
@@ -140,10 +167,12 @@ export const useSyncStore = defineStore('sync', () => {
       }
 
       case 'delete': {
-        const { error: deleteError } = await supabase
+        const operationPromise = supabase
           .from(table)
           .delete()
           .eq('id', id)
+        
+        const { error: deleteError } = await Promise.race([operationPromise, timeout])
         
         if (deleteError) throw deleteError
         result = { id }

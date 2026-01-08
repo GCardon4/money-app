@@ -209,6 +209,15 @@ const handleSubmit = async () => {
   if (!amount.value || !description.value || !categoryId.value || !type.value || !payMethod.value) return
 
   loading.value = true
+  
+  // Mostrar notificación de procesamiento
+  const processingNotif = $q.notify({
+    type: 'ongoing',
+    message: 'Guardando gasto...',
+    spinner: true,
+    timeout: 0 // No se cierra automáticamente
+  })
+  
   try {
     const expenseData = {
       amount: amount.value,
@@ -225,6 +234,9 @@ const handleSubmit = async () => {
       table: 'expenses',
       data: expenseData
     })
+
+    // Cerrar notificación de procesamiento
+    processingNotif()
 
     if (result.offline) {
       // Agregar temporalmente a la lista local
@@ -244,14 +256,21 @@ const handleSubmit = async () => {
         timeout: 3000
       })
     } else {
-      // Recargar desde servidor
-      await financeStore.loadExpenses()
+      // Agregar inmediatamente a la lista local para feedback rápido
+      if (result.data) {
+        financeStore.addExpense(result.data)
+      }
 
       $q.notify({
         type: 'positive',
         message: 'Gasto agregado correctamente',
         position: 'top',
         timeout: 2000
+      })
+
+      // Recargar desde servidor en background para sincronizar
+      financeStore.loadExpenses().catch(err => {
+        console.warn('Error recargando gastos:', err)
       })
     }
 
@@ -262,6 +281,9 @@ const handleSubmit = async () => {
     payMethod.value = 'Efectivo'
     type.value = 'Variable'
   } catch (error) {
+    // Cerrar notificación de procesamiento
+    processingNotif()
+    
     console.error('Error al guardar gasto:', error)
     $q.notify({
       type: 'negative',

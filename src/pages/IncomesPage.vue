@@ -130,6 +130,15 @@
               :loading="loadingSources"
             />
 
+            <q-select
+              v-model="form.pay_method"
+              :options="payMethodOptions"
+              label="Método de Pago"
+              outlined
+              :rules="[val => !!val || 'Requerido']"
+              class="q-mb-md"
+            />
+
             <div class="row q-gutter-sm justify-end">
               <q-btn
                 flat
@@ -171,13 +180,17 @@ const loading = ref(false)
 const loadingSources = ref(false)
 const sourceOptions = ref([])
 
+// Opciones de método de pago
+const payMethodOptions = ['Efectivo', 'Banco']
+
 // Formulario
 const form = ref({
   id: null,
   name: '',
   amount: null,
   description: '',
-  source: null
+  source: null,
+  pay_method: 'Banco'
 })
 
 // Formatea el monto con separador de miles
@@ -235,7 +248,8 @@ const saveIncome = async () => {
       name: form.value.name,
       amount: form.value.amount,
       description: form.value.description,
-      source: form.value.source
+      source: form.value.source,
+      pay_method: form.value.pay_method
     }
 
     let error
@@ -286,7 +300,8 @@ const editIncome = (income) => {
     name: income.name,
     amount: income.amount,
     description: income.description,
-    source: income.source
+    source: income.source,
+    pay_method: income.pay_method || 'Banco'
   }
   showDialog.value = true
 }
@@ -301,7 +316,8 @@ const closeDialog = () => {
     name: '',
     amount: null,
     description: '',
-    source: sourceOptions.value[0]?.id || null
+    source: sourceOptions.value[0]?.id || null,
+    pay_method: 'Banco'
   }
 }
 
