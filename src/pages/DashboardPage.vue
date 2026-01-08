@@ -69,11 +69,11 @@
               </div>
               <div class="col-auto">
                 <q-chip 
-                  :color="financeStore.commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'" 
+                  :color="commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'" 
                   text-color="white"
                   size="lg"
                 >
-                  {{ financeStore.commitmentsCompletionPercentage }}% Completado
+                  {{ commitmentsCompletionPercentage }}% Completado
                 </q-chip>
               </div>
             </div>
@@ -81,8 +81,8 @@
             <div class="row items-center q-gutter-md">
               <div class="col">
                 <q-linear-progress 
-                  :value="financeStore.commitmentsCompletionPercentage / 100" 
-                  :color="financeStore.commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'"
+                  :value="commitmentsCompletionPercentage / 100" 
+                  :color="commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'"
                   size="20px"
                   rounded
                 >
@@ -240,6 +240,15 @@ const formatAmount = (amount) => {
 // Calcula el total pagado de todos los compromisos
 const totalCommitmentsPaid = computed(() => {
   return Object.values(financeStore.commitmentsProgress).reduce((sum, amount) => sum + amount, 0)
+})
+
+// Calcula el porcentaje de completitud de compromisos
+const commitmentsCompletionPercentage = computed(() => {
+  const total = financeStore.totalMonthlyCommitments
+  if (total === 0) return 0
+
+  const paid = totalCommitmentsPaid.value
+  return Math.min(Math.round((paid / total) * 100), 100)
 })
 
 // Obtiene compromisos activos con su progreso de pago

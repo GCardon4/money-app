@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { supabase } from 'boot/supabase'
 import { useAuthStore } from 'stores/authStore'
@@ -151,8 +151,17 @@ const loadingCategories = ref(false)
 // Opciones de categorías cargadas desde Supabase
 const categoryOptions = ref([])
 
-// Opciones de compromisos activos
-const commitmentOptions = ref([])
+// Opciones de compromisos activos (reactivo)
+const commitmentOptions = computed(() => {
+  return financeStore.commitments
+    .filter(c => c.status)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      amount: c.amount,
+      pay_date: c.pay_date
+    }))
+})
 
 // Opciones de tipo de gasto
 const typeOptions = ['Fijo', 'Variable']
@@ -193,18 +202,6 @@ const loadCategories = async () => {
   } finally {
     loadingCategories.value = false
   }
-}
-
-// Carga los compromisos activos
-const loadCommitments = () => {
-  commitmentOptions.value = financeStore.commitments
-    .filter(c => c.status)
-    .map(c => ({
-      id: c.id,
-      name: c.name,
-      amount: c.amount,
-      pay_date: c.pay_date
-    }))
 }
 
 // Guarda un nuevo gasto (con soporte offline)
@@ -276,9 +273,8 @@ const handleSubmit = async () => {
   }
 }
 
-// Cargar categorías y compromisos al montar el componente
+// Cargar categorías al montar el componente
 onMounted(() => {
   loadCategories()
-  loadCommitments()
 })
 </script>

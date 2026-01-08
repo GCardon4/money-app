@@ -83,15 +83,6 @@ export const useFinanceStore = defineStore('finance', {
       })
 
       return progressMap
-    },
-
-    // Calcula el porcentaje total de cumplimiento de compromisos del mes
-    commitmentsCompletionPercentage: (state) => {
-      const total = state.totalMonthlyCommitments
-      if (total === 0) return 0
-
-      const paid = Object.values(state.commitmentsProgress).reduce((sum, amount) => sum + amount, 0)
-      return Math.min(Math.round((paid / total) * 100), 100)
     }
   },
 

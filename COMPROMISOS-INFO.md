@@ -51,18 +51,16 @@ Sistema para vincular gastos con compromisos mensuales y visualizar el progreso 
 
 ## 🗄️ Cambios en Base de Datos
 
-### ✅ Implementado en Supabase
+### Requerido en Supabase
 
-Columna `commitment_id` agregada a tabla `expenses`:
+Agregar columna `commitment_id` a tabla `expenses`:
 
 ```sql
 ALTER TABLE expenses 
-ADD COLUMN commitment_id int8 REFERENCES commitments(id) ON DELETE SET NULL;
+ADD COLUMN commitment_id UUID REFERENCES commitments(id) ON DELETE SET NULL;
 
 CREATE INDEX idx_expenses_commitment_id ON expenses(commitment_id);
 ```
-
-**Tipo de dato:** `int8` (bigint) con llave foránea a `commitments(id)`
 
 ## 💡 Ejemplos de Uso
 
