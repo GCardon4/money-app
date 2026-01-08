@@ -51,6 +51,47 @@ export const useFinanceStore = defineStore('finance', {
       return state.debts
         .filter(debt => debt.status !== 'paid')
         .reduce((sum, debt) => sum + Number(debt.amount), 0)
+    },
+
+    // Calcula el total de compromisos activos mensuales
+    totalMonthlyCommitments: (state) => {
+      return state.commitments
+        .filter(commitment => commitment.status)
+        .reduce((sum, commitment) => sum + Number(commitment.amount), 0)
+    },
+
+    // Calcula cuánto se ha pagado de cada compromiso en el mes actual
+    commitmentsProgress: (state) => {
+      const now = new Date()
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+      // Filtra gastos del mes actual que tengan commitment_id
+      const commitmentExpenses = state.expenses.filter(expense => {
+        const date = new Date(expense.created_at)
+        return date >= firstDay && date <= lastDay && expense.commitment_id
+      })
+
+      // Agrupa por commitment_id y suma los montos
+      const progressMap = {}
+      commitmentExpenses.forEach(expense => {
+        const commitmentId = expense.commitment_id
+        if (!progressMap[commitmentId]) {
+          progressMap[commitmentId] = 0
+        }
+        progressMap[commitmentId] += Number(expense.amount)
+      })
+
+      return progressMap
+    },
+
+    // Calcula el porcentaje total de cumplimiento de compromisos del mes
+    commitmentsCompletionPercentage: (state) => {
+      const total = state.totalMonthlyCommitments
+      if (total === 0) return 0
+
+      const paid = Object.values(state.commitmentsProgress).reduce((sum, amount) => sum + amount, 0)
+      return Math.min(Math.round((paid / total) * 100), 100)
     }
   },
 

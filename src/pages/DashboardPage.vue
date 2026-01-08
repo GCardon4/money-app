@@ -56,6 +56,80 @@
         </q-card>
       </div>
 
+      <!-- Meta de Compromisos del Mes -->
+      <div class="col-12">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-h6">Meta de Compromisos del Mes</div>
+                <div class="text-caption text-grey-7">
+                  Gastos asociados a compromisos mensuales
+                </div>
+              </div>
+              <div class="col-auto">
+                <q-chip 
+                  :color="financeStore.commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'" 
+                  text-color="white"
+                  size="lg"
+                >
+                  {{ financeStore.commitmentsCompletionPercentage }}% Completado
+                </q-chip>
+              </div>
+            </div>
+
+            <div class="row items-center q-gutter-md">
+              <div class="col">
+                <q-linear-progress 
+                  :value="financeStore.commitmentsCompletionPercentage / 100" 
+                  :color="financeStore.commitmentsCompletionPercentage >= 100 ? 'positive' : 'primary'"
+                  size="20px"
+                  rounded
+                >
+                  <div class="absolute-full flex flex-center">
+                    <q-badge 
+                      color="white" 
+                      text-color="dark" 
+                      :label="`$${formatAmount(totalCommitmentsPaid)} / $${formatAmount(financeStore.totalMonthlyCommitments)}`" 
+                    />
+                  </div>
+                </q-linear-progress>
+              </div>
+            </div>
+
+            <div v-if="activeCommitmentsWithProgress.length > 0" class="q-mt-md">
+              <q-list separator dense>
+                <q-item v-for="commitment in activeCommitmentsWithProgress" :key="commitment.id">
+                  <q-item-section>
+                    <q-item-label>{{ commitment.name }}</q-item-label>
+                    <q-item-label caption>
+                      Día {{ commitment.pay_date }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <div class="text-right">
+                      <div class="text-caption">
+                        ${{ formatAmount(commitment.paid) }} / ${{ formatAmount(commitment.amount) }}
+                      </div>
+                      <q-linear-progress 
+                        :value="commitment.percentage / 100" 
+                        :color="commitment.percentage >= 100 ? 'positive' : 'orange'"
+                        size="4px"
+                        style="width: 100px"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+
+            <div v-else class="text-center text-grey-6 q-mt-md">
+              No hay compromisos activos este mes
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
       <!-- Acciones rápidas -->
       <div class="col-12">
         <q-card flat bordered>
@@ -162,6 +236,30 @@ const formatAmount = (amount) => {
   const num = Math.round(Number(amount || 0))
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
+
+// Calcula el total pagado de todos los compromisos
+const totalCommitmentsPaid = computed(() => {
+  return Object.values(financeStore.commitmentsProgress).reduce((sum, amount) => sum + amount, 0)
+})
+
+// Obtiene compromisos activos con su progreso de pago
+const activeCommitmentsWithProgress = computed(() => {
+  return financeStore.commitments
+    .filter(c => c.status)
+    .map(commitment => {
+      const paid = financeStore.commitmentsProgress[commitment.id] || 0
+      const percentage = commitment.amount > 0 
+        ? Math.min(Math.round((paid / commitment.amount) * 100), 100)
+        : 0
+      
+      return {
+        ...commitment,
+        paid,
+        percentage
+      }
+    })
+    .sort((a, b) => a.pay_date - b.pay_date)
+})
 
 // Calcula gastos agrupados por categoría del mes actual
 const expensesByCategory = computed(() => {

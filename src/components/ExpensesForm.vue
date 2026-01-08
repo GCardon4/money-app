@@ -32,7 +32,7 @@
       </div>
 
       <!-- Segunda fila: Tipo, Categoría y Método de Pago -->
-      <div class="row q-col-gutter-sm">
+      <div class="row q-col-gutter-sm q-mb-sm">
         <div class="col-4">
           <q-select
             v-model="type"
@@ -75,6 +75,39 @@
         </div>
       </div>
 
+      <!-- Tercera fila: Compromiso asociado (opcional) -->
+      <div class="row q-col-gutter-sm">
+        <div class="col-12">
+          <q-select
+            v-model="commitmentId"
+            :options="commitmentOptions"
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            placeholder="¿Asociar a un compromiso? (opcional)"
+            dense
+            outlined
+            clearable
+            :disable="loading"
+          >
+            <template v-slot:prepend>
+              <q-icon name="event" />
+            </template>
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.name }}</q-item-label>
+                  <q-item-label caption>
+                    ${{ formatAmount(scope.opt.amount) }} - Día {{ scope.opt.pay_date }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+        </div>
+      </div>
+
       <!-- Botón Flotante -->
       <q-btn
         type="submit"
@@ -109,6 +142,7 @@ const syncStore = useSyncStore()
 const amount = ref(null)
 const description = ref('')
 const categoryId = ref(null)
+const commitmentId = ref(null)
 const type = ref('Variable')
 const payMethod = ref('Efectivo')
 const loading = ref(false)
@@ -117,11 +151,20 @@ const loadingCategories = ref(false)
 // Opciones de categorías cargadas desde Supabase
 const categoryOptions = ref([])
 
+// Opciones de compromisos activos
+const commitmentOptions = ref([])
+
 // Opciones de tipo de gasto
 const typeOptions = ['Fijo', 'Variable']
 
 // Opciones de método de pago
 const payMethodOptions = ['Efectivo', 'Banco']
+
+// Formatea el monto con separador de miles
+const formatAmount = (amount) => {
+  const num = Math.round(Number(amount || 0))
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
 
 // Carga las categorías desde Supabase
 const loadCategories = async () => {
@@ -152,6 +195,18 @@ const loadCategories = async () => {
   }
 }
 
+// Carga los compromisos activos
+const loadCommitments = () => {
+  commitmentOptions.value = financeStore.commitments
+    .filter(c => c.status)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      amount: c.amount,
+      pay_date: c.pay_date
+    }))
+}
+
 // Guarda un nuevo gasto (con soporte offline)
 const handleSubmit = async () => {
   if (!amount.value || !description.value || !categoryId.value || !type.value || !payMethod.value) return
@@ -163,7 +218,8 @@ const handleSubmit = async () => {
       description: description.value,
       category: categoryId.value,
       type: type.value,
-      pay_method: payMethod.value
+      pay_method: payMethod.value,
+      commitment_id: commitmentId.value || null
     }
 
     // Usar sincronización offline
@@ -205,6 +261,7 @@ const handleSubmit = async () => {
     // Limpiar formulario
     amount.value = null
     description.value = ''
+    commitmentId.value = null
     payMethod.value = 'Efectivo'
     type.value = 'Variable'
   } catch (error) {
@@ -219,8 +276,9 @@ const handleSubmit = async () => {
   }
 }
 
-// Cargar categorías al montar el componente
+// Cargar categorías y compromisos al montar el componente
 onMounted(() => {
   loadCategories()
+  loadCommitments()
 })
 </script>
