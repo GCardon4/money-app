@@ -62,10 +62,10 @@
           <q-card-section>
             <div class="row items-center q-mb-md">
               <div class="col">
-                <div class="text-h6">Meta de Compromisos del Mes</div>
-                <div class="text-caption text-grey-7">
-                  Gastos asociados a compromisos mensuales
-                </div>
+                <div class="text-h6">Meta-Mes</div>
+                <span class="text-caption text-grey-7">
+                  Compromisos
+                </span>
               </div>
               <div class="col-auto">
                 <q-chip 
