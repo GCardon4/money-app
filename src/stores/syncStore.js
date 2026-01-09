@@ -19,12 +19,65 @@ export const useSyncStore = defineStore('sync', () => {
   const lastSyncTime = ref(null)
 
   // Detecta cambios en el estado de conexión
-  const setupConnectionListeners = () => {
+  const setupConnectionListeners = async () => {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     
+    // Detecta cuando la app vuelve a estar visible (PWA)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // Listener de Capacitor para Android/iOS
+    try {
+      const { App } = await import('@capacitor/app')
+      
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          console.log('▶️ App activa - verificando conexión...')
+          recheckConnection()
+        }
+      })
+      
+      console.log('✅ Capacitor App listener registrado')
+    } catch (error) {
+      console.log('ℹ️ Capacitor no disponible (modo web)')
+    }
+    
     // Verifica conexión cada 30 segundos
     setInterval(checkConnection, 30000)
+  }
+
+  const handleVisibilityChange = async () => {
+    if (!document.hidden) {
+      console.log('👁️ App visible - verificando conexión...')
+      await recheckConnection()
+    }
+  }
+
+  const recheckConnection = async () => {
+    console.log('🔍 Verificando estado de conexión...')
+    
+    // Primera verificación con navigator.onLine
+    if (!navigator.onLine) {
+      console.log('📴 navigator.onLine = false')
+      isOnline.value = false
+      return
+    }
+    
+    // Verificación real con ping a Supabase
+    const hasConnection = await checkRealConnection()
+    const previousState = isOnline.value
+    isOnline.value = hasConnection
+    
+    if (hasConnection) {
+      console.log('✅ Conexión verificada y activa')
+      // Si cambiamos de offline a online, sincronizar
+      if (!previousState && pendingCount.value > 0) {
+        console.log('🔄 Sincronizando operaciones pendientes...')
+        await syncPendingOperations()
+      }
+    } else {
+      console.log('📴 Sin conexión a Supabase')
+    }
   }
 
   const handleOnline = async () => {

@@ -116,7 +116,7 @@ onMounted(async () => {
   await authStore.initializeAuth()
 
   // Inicializa el sistema de sincronización offline
-  syncStore.setupConnectionListeners()
+  await syncStore.setupConnectionListeners()
   await syncStore.updatePendingCount()
 
   // Programa notificaciones si el usuario está autenticado
