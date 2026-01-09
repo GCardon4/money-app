@@ -117,6 +117,11 @@ onMounted(async () => {
 
   // Inicializa el sistema de sincronización offline
   await syncStore.setupConnectionListeners()
+  
+  // Verificación inicial de conexión al abrir la app
+  console.log('🚀 Verificación inicial de conexión...')
+  await syncStore.recheckConnection()
+  
   await syncStore.updatePendingCount()
 
   // Programa notificaciones si el usuario está autenticado

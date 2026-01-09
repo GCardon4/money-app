@@ -25,10 +25,32 @@
         </span>
       </div>
       
+      <!-- Botón de recarga cuando está offline -->
+      <q-btn
+        v-if="!syncStore.isOnline && !checkingConnection"
+        flat
+        dense
+        round
+        icon="refresh"
+        @click="recheckConnection"
+        class="text-white"
+      >
+        <q-tooltip>Verificar conexión</q-tooltip>
+      </q-btn>
+
+      <!-- Spinner cuando está verificando -->
+      <q-spinner-dots
+        v-if="checkingConnection"
+        color="white"
+        size="24px"
+      />
+      
+      <!-- Botón de sincronización cuando está online -->
       <q-btn
         v-if="syncStore.isOnline && !syncStore.isSyncing"
         flat
         dense
+        round
         icon="sync"
         @click="syncStore.forceSyncNow"
         class="text-white"
@@ -40,9 +62,46 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useSyncStore } from 'stores/syncStore'
+import { useQuasar } from 'quasar'
 
 const syncStore = useSyncStore()
+const $q = useQuasar()
+const checkingConnection = ref(false)
+
+// Verifica la conexión manualmente
+const recheckConnection = async () => {
+  checkingConnection.value = true
+  
+  try {
+    await syncStore.recheckConnection()
+    
+    if (syncStore.isOnline) {
+      $q.notify({
+        type: 'positive',
+        message: 'Conexión restablecida',
+        icon: 'wifi',
+        position: 'top',
+        timeout: 2000
+      })
+    } else {
+      $q.notify({
+        type: 'warning',
+        message: 'Aún sin conexión',
+        icon: 'wifi_off',
+        position: 'top',
+        timeout: 2000
+      })
+    }
+  } catch (error) {
+    console.error('Error verificando conexión:', error)
+  } finally {
+    setTimeout(() => {
+      checkingConnection.value = false
+    }, 500)
+  }
+}
 </script>
 
 <style scoped>

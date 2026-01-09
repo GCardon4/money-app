@@ -353,6 +353,7 @@ export const useSyncStore = defineStore('sync', () => {
     updatePendingCount,
     cacheTableData,
     getCachedTableData,
-    forceSyncNow
+    forceSyncNow,
+    recheckConnection
   }
 })
