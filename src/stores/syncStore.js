@@ -38,7 +38,7 @@ export const useSyncStore = defineStore('sync', () => {
       })
       
       console.log('✅ Capacitor App listener registrado')
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Capacitor no disponible (modo web)')
     }
     
