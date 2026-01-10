@@ -27,23 +27,24 @@ export const useSyncStore = defineStore('sync', () => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     
     // Listener de Capacitor para Android/iOS (solo si está disponible)
-    if (typeof window !== 'undefined' && window.Capacitor) {
+    // @ts-ignore - Capacitor solo disponible en apps nativas
+    if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
       try {
-        const { App } = await import('@capacitor/app')
-        
-        App.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) {
-            console.log('▶️ App activa - verificando conexión...')
-            recheckConnection()
-          }
+        // Solo importa en runtime, no en build time
+        import('@capacitor/app').then(({ App }) => {
+          App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+              console.log('▶️ App activa - verificando conexión...')
+              recheckConnection()
+            }
+          })
+          console.log('✅ Capacitor App listener registrado')
+        }).catch(() => {
+          console.log('ℹ️ Error al cargar Capacitor App plugin')
         })
-        
-        console.log('✅ Capacitor App listener registrado')
       } catch {
-        console.log('ℹ️ Error al cargar Capacitor App plugin')
+        console.log('ℹ️ Error al cargar Capacitor')
       }
-    } else {
-      console.log('ℹ️ Capacitor no disponible (modo web)')
     }
     
     // Verifica conexión cada 30 segundos
