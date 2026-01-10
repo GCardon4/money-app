@@ -58,7 +58,16 @@ export default defineConfig((/* ctx */) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf) {
+        // Externalizar @capacitor/app para que no intente resolverlo en build time
+        viteConf.build = viteConf.build || {}
+        viteConf.build.rollupOptions = viteConf.build.rollupOptions || {}
+        viteConf.build.rollupOptions.external = viteConf.build.rollupOptions.external || []
+        
+        if (Array.isArray(viteConf.build.rollupOptions.external)) {
+          viteConf.build.rollupOptions.external.push('@capacitor/app')
+        }
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [
