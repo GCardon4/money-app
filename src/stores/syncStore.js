@@ -26,19 +26,23 @@ export const useSyncStore = defineStore('sync', () => {
     // Detecta cuando la app vuelve a estar visible (PWA)
     document.addEventListener('visibilitychange', handleVisibilityChange)
     
-    // Listener de Capacitor para Android/iOS
-    try {
-      const { App } = await import('@capacitor/app')
-      
-      App.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) {
-          console.log('▶️ App activa - verificando conexión...')
-          recheckConnection()
-        }
-      })
-      
-      console.log('✅ Capacitor App listener registrado')
-    } catch {
+    // Listener de Capacitor para Android/iOS (solo si está disponible)
+    if (typeof window !== 'undefined' && window.Capacitor) {
+      try {
+        const { App } = await import('@capacitor/app')
+        
+        App.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) {
+            console.log('▶️ App activa - verificando conexión...')
+            recheckConnection()
+          }
+        })
+        
+        console.log('✅ Capacitor App listener registrado')
+      } catch {
+        console.log('ℹ️ Error al cargar Capacitor App plugin')
+      }
+    } else {
       console.log('ℹ️ Capacitor no disponible (modo web)')
     }
     
