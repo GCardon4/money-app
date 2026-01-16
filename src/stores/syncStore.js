@@ -27,11 +27,12 @@ export const useSyncStore = defineStore('sync', () => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     
     // Listener de Capacitor para Android/iOS (solo si está disponible)
-    // @ts-ignore - Capacitor solo disponible en apps nativas
+    // Solo se ejecuta si Capacitor App está disponible globalmente
     if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
       try {
-        // Solo importa en runtime, no en build time
-        import('@capacitor/app').then(({ App }) => {
+        // Verifica si Capacitor App ya está cargado globalmente
+        const App = window.Capacitor?.Plugins?.App
+        if (App) {
           App.addListener('appStateChange', ({ isActive }) => {
             if (isActive) {
               console.log('▶️ App activa - verificando conexión...')
@@ -39,11 +40,9 @@ export const useSyncStore = defineStore('sync', () => {
             }
           })
           console.log('✅ Capacitor App listener registrado')
-        }).catch(() => {
-          console.log('ℹ️ Error al cargar Capacitor App plugin')
-        })
-      } catch {
-        console.log('ℹ️ Error al cargar Capacitor')
+        }
+      } catch (error) {
+        console.log('ℹ️ Capacitor App no disponible:', error.message)
       }
     }
     
@@ -54,6 +53,8 @@ export const useSyncStore = defineStore('sync', () => {
   const handleVisibilityChange = async () => {
     if (!document.hidden) {
       console.log('👁️ App visible - verificando conexión...')
+      // Dar un momento para que la conexión se restablezca en Android
+      await new Promise(resolve => setTimeout(resolve, 1000))
       await recheckConnection()
     }
   }
@@ -69,33 +70,47 @@ export const useSyncStore = defineStore('sync', () => {
     }
     
     // Verificación real con ping a Supabase
-    const hasConnection = await checkRealConnection()
+    // Dar más tiempo en el primer intento (especialmente importante en Android)
+    const hasConnection = await checkRealConnection(true)
     const previousState = isOnline.value
-    isOnline.value = hasConnection
     
     if (hasConnection) {
       console.log('✅ Conexión verificada y activa')
+      isOnline.value = true
       // Si cambiamos de offline a online, sincronizar
       if (!previousState && pendingCount.value > 0) {
         console.log('🔄 Sincronizando operaciones pendientes...')
         await syncPendingOperations()
       }
     } else {
-      console.log('📴 Sin conexión a Supabase')
+      console.log('⚠️ Primera verificación falló, intentando nuevamente...')
+      // Segundo intento antes de marcar como offline
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      const secondAttempt = await checkRealConnection(true)
+      isOnline.value = secondAttempt
+      
+      if (secondAttempt) {
+        console.log('✅ Conexión verificada en segundo intento')
+        if (!previousState && pendingCount.value > 0) {
+          await syncPendingOperations()
+        }
+      } else {
+        console.log('📴 Sin conexión a Supabase después de 2 intentos')
+      }
     }
   }
 
   const handleOnline = async () => {
     console.log('🟢 Conexión detectada - verificando...')
-    isOnline.value = true
     
-    // Esperar 2 segundos para asegurar que la conexión sea estable
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Esperar 3 segundos para asegurar que la conexión sea estable (importante en Android)
+    await new Promise(resolve => setTimeout(resolve, 3000))
     
-    // Verificar que realmente haya conexión
-    const hasRealConnection = await checkRealConnection()
+    // Verificar que realmente haya conexión con timeout extendido
+    const hasRealConnection = await checkRealConnection(true)
     if (hasRealConnection) {
       console.log('✅ Conexión verificada - iniciando sincronización')
+      isOnline.value = true
       await syncPendingOperations()
     } else {
       console.log('⚠️ Conexión no verificada - esperando...')
@@ -128,11 +143,15 @@ export const useSyncStore = defineStore('sync', () => {
   }
 
   // Verifica si realmente hay conexión haciendo un ping rápido a Supabase
-  const checkRealConnection = async () => {
+  // extendedTimeout: usar timeout más largo (útil al reabrir app en Android)
+  const checkRealConnection = async (extendedTimeout = false) => {
     try {
-      // Timeout de 5 segundos para la verificación
+      // Timeout más largo para Android/primera verificación: 10 segundos
+      // Timeout normal para verificaciones rutinarias: 5 segundos
+      const timeoutMs = extendedTimeout ? 10000 : 5000
+      
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
       )
       
       const checkPromise = supabase
@@ -145,7 +164,7 @@ export const useSyncStore = defineStore('sync', () => {
       
       return !error || error.code !== 'PGRST301'
     } catch (error) {
-      console.log('⚠️ Verificación de conexión falló:', error.message)
+      console.log(`⚠️ Verificación de conexión falló (${extendedTimeout ? '10s' : '5s'}):`, error.message)
       return false
     }
   }
